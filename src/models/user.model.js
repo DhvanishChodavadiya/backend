@@ -10,8 +10,17 @@ const userSchema = Schema(
             unique: true,
             lowercase: true
         },
-        password: {
+        email: {
             type: String,
+            required: true
+        },
+        password: {
+            required: true,
+            type: String,
+        },
+        avatar: {
+            type: String,
+            required: true
         },
         refreshToken: {
             type: String,
@@ -26,11 +35,11 @@ userSchema.pre("save", async function(next) {
     next()
 })
 
-userSchema.models.isPasswordCorrect = async function(password) {
+userSchema.methods.isPasswordCorrect = async function(password) {
     return await bcrypt.compare(password,this.password)
 }
 
-userSchema.models.generateAccessToken = function() {
+userSchema.methods.generateAccessToken = function() {
     return jwt.sign(
         {
             _id: this._id,
@@ -42,7 +51,7 @@ userSchema.models.generateAccessToken = function() {
         }
     )
 }
-userSchema.models.generateRefreshToken = function() {
+userSchema.methods.generateRefreshToken = function() {
     return jwt.sign(
         {
             _id: this._id
