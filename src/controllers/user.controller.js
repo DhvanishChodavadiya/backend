@@ -275,6 +275,73 @@ const updateAvatar = asyncHandler(async(req,res) => {
     )
 })
 
+const getUserChannelProfile = asyncHandler(async(req,res) => {
+  const userName = req.params;
+  if (!userName?.trim()) {
+    throw new apiError(400,"username is missing.")
+  }
+
+  const channel = await User.aggregate([
+    {
+      $match: {
+        userName: userName?.toLowerCase()
+      }
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers"
+      }
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribed"
+      }
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers"
+        },
+        subscribedCount: {
+          $size: "$subscribed"
+        },
+        isSubscribed: {
+          if: { $in: [req.user?._id,"$subscribers.subscribe"]},
+          then: true,
+          else: false
+        }
+      }
+    },
+    {
+      $project: {
+        username: 1,
+        avatar: 1,
+        subscribers: 1,
+        subscribed: 1,
+        isSubscribed: 1
+      }
+    }
+  ])
+  if (!channel.length) {
+    throw new apiError(404,"channel not found.")
+  }
+
+  return res.status(200)
+  .json(
+    new apiResponse(
+      200,
+      channel[0],
+      "User channel profile fetched successfully."
+    )
+  )
+})
+
 export {
   registerUser,
   loginUser,
@@ -283,5 +350,6 @@ export {
   passwordChange,
   getCurrentUser,
   updateUserDetails,
-  updateAvatar
+  updateAvatar,
+  getUserChannelProfile
 };
