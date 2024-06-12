@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getCurrentUser,
+  getUserChannelProfile,
   loginUser,
   logoutUser,
   passwordChange,
@@ -46,5 +47,7 @@ router.route("/updateAvatar").post(
   ]),
   updateAvatar
 );
+
+router.route("/getChannelProfile").post(getUserChannelProfile)
 
 export default router;
