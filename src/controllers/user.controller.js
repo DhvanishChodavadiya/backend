@@ -130,7 +130,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      refreshToken: undefined,
+      refreshToken: 1,
     },
     {
       new: true,
@@ -277,7 +277,7 @@ const updateAvatar = asyncHandler(async(req,res) => {
 })
 
 const getUserChannelProfile = asyncHandler(async(req,res) => {
-  const userName = req.params;
+  const {userName} = req.params;
   if (!userName?.trim()) {
     throw new apiError(400,"username is missing.")
   }
@@ -313,9 +313,11 @@ const getUserChannelProfile = asyncHandler(async(req,res) => {
           $size: "$subscribed"
         },
         isSubscribed: {
-          if: { $in: [req.user?._id,"$subscribers.subscribe"]},
-          then: true,
-          else: false
+          $cond: {
+            if: { $in: [req.user?._id,"$subscribers.subscribe"]},
+            then: true,
+            else: false
+          }
         }
       }
     },
@@ -347,7 +349,7 @@ const getWatchHistory = asyncHandler(async(req,res) => {
   const user = await User.aggregate([
     {
       $match: {
-        _id: mongoose.Types.ObjectId(req.user._id)
+        _id: new mongoose.Types.ObjectId(req.user._id)
       }
     },
     {

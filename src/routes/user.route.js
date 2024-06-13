@@ -40,7 +40,7 @@ router.route("/updateUserDetails").patch(verifyJWT, updateUserDetails);
 
 router.route("/updateAvatar").patch(
   verifyJWT,
-  single("avatar"),
+  upload.single("avatar"),
   updateAvatar
 );
 
