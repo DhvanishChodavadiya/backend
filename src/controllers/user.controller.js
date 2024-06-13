@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import bcrypt  from "bcrypt";
 
 const generateAccessTokenAndRefreshTokens = async (userId) => {
   try {
@@ -205,7 +206,17 @@ const passwordChange = asyncHandler(async (req, res) => {
     throw new apiError(400, "Old password is wrong.");
   }
 
-  user.password = newPassword;
+  await User.findByIdAndUpdate(
+    user,
+    {
+      $set: {
+        password: await bcrypt.hash(newPassword,10)
+      }
+    },
+    {
+      new: true
+    }
+  )
 
   return res
     .status(200)
