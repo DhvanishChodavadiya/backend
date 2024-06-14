@@ -192,7 +192,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const passwordChange = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
-  if (!oldPassword && !newPassword) {
+  if (!oldPassword || !newPassword) {
     throw new apiError(400, "all fields are required.");
   }
 
