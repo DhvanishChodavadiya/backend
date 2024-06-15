@@ -5,6 +5,38 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import { Video } from "../models/video.model.js";
 import mongoose,{isValidObjectId} from "mongoose";
 
+const getAllVideos = asyncHandler(async(req,res) => {
+    const {page = 1,limit = 10,query,sortBy,sortType,userId} = req.query;
+    const sort = {[sortBy]:sortType}
+    const skip = (page - 1) * limit
+
+    // const video = await Video.aggregatePaginate(query,{
+    //     page: parseInt(page),
+    //     limit: parseInt(limit),
+    //     sort: { [sortBy]: sortType},
+    //     userId: isValidObjectId(userId)? userId : null,
+    //     customLabels: {
+    //         docs: "videos"
+    //     }
+    // })
+    const video = await Video.find({owner: new mongoose.Types.ObjectId(userId)})
+    .sort(sort)
+    .limit(limit)
+    .skip(skip)
+    if (!video) {
+        throw new apiError(404,"Video not found.")
+    }
+
+    res.status(200)
+    .json(
+        new apiResponse(
+            200,
+            video,
+            "All video fetched successfully."
+        )
+    )
+})
+
 const publishVideo = asyncHandler(async(req,res) => {
     const {title,description} = req.body;
     if ([title,description].some((field)=>field?.trim() === '')) {
@@ -80,7 +112,7 @@ const updateVideoDetails = asyncHandler(async(req,res) => {
     const thumbnailLocalPath = req.file?.path
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath); 
     // console.log(title,description,thumbnail);
-    if ((title === "") && (description === "") && (thumbnail === "")) {
+    if ((title === "") && (description === "") && (thumbnail.url === "")) {
         throw new apiError(400,"Atleast one field is required.")
     }
     // if (!title && !description && !thumbnail.url) {
@@ -128,8 +160,68 @@ const updateVideoDetails = asyncHandler(async(req,res) => {
     )
 })
 
+const deleteVideo = asyncHandler(async(req,res) => {
+    const {videoId} = req.params;
+    if (!isValidObjectId(videoId)) {
+        throw new apiError(400,"Video id is required.")
+    }
+
+    const video = await Video.findById(videoId)
+    if (!video) {
+        throw new apiResponse(404,"Video not found.")
+    }
+
+    await Video.deleteOne(
+        {_id: new mongoose.Types.ObjectId(videoId)},
+    )
+
+    return res.status(200)
+    .json(
+        new apiResponse(
+            200,
+            "Video deleted successfully."
+        )
+    )
+})
+
+const togglePublishedStatus = asyncHandler(async(req,res) => {
+    const {videoId} = req.params;
+    if (!isValidObjectId(videoId)) {
+        throw new apiError(400,"Invalid video id.")
+    }
+
+    const video = await Video.findById(videoId)
+    if (!video) {
+        throw new apiError(404,"Video not found.")
+    }
+
+
+    await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set: {
+                isPublished: !video.isPublished
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    res.status(200)
+    .json(
+        new apiResponse(
+            200,
+            "isPublished toggled successfully."
+        )
+    )
+})
+
 export {
     publishVideo,
     getVideoById,
-    updateVideoDetails
+    updateVideoDetails,
+    deleteVideo,
+    togglePublishedStatus,
+    getAllVideos
 }
