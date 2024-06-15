@@ -20,4 +20,7 @@ app.use("/api/v1/user",userRouter)
 import videoRouter from "./routes/video.route.js";
 app.use("/api/v1/video",videoRouter);
 
+import commentRouter from "./routes/comment.route.js";
+app.use("/api/v1/comment",commentRouter);
+
 export {app}
