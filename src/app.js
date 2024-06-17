@@ -26,4 +26,7 @@ app.use("/api/v1/comment",commentRouter);
 import likeRouter from "./routes/like.route.js";
 app.use("/api/v1/like",likeRouter);
 
+import playlistRouter from "./routes/playlist.route.js";
+app.use("/api/v1/playlist",playlistRouter);
+
 export {app}
