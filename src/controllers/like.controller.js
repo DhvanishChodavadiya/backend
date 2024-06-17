@@ -86,6 +86,40 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     );
 });
 
+const toggleTweetLike = asyncHandler(async(req,res) => {
+  const { tweetId } = req.params;
+  if (!isValidObjectId(tweetId)) {
+    throw new apiError(400,"Invalid tweet id.")
+  }
+
+  const existingLiked = await Like.findOne({tweet: tweetId, likedBy: req.user._id})
+
+  if (existingLiked) {
+    await Like.deleteOne({tweet: tweetId, likedBy: req.user._id})
+  }
+  else {
+    await Like.create(
+      {
+        tweet: tweetId,
+        likedBy: req.user._id
+      }
+    )
+  }
+
+  const likeStatus = await existingLiked ? false : true;
+  const totalLike = await Like.countDocuments({tweet: tweetId})
+
+  return res
+  .status(200)
+  .json(
+    new apiResponse(
+      200,
+      {likeStatus,totalLike},
+      "Tweet like toggled successfully."
+    )
+  )
+})
+
 const getAllLikedVideos = asyncHandler(async (req, res) => {
   const likedVideos = await Like.aggregate([
     {
@@ -155,4 +189,4 @@ const getAllLikedVideos = asyncHandler(async (req, res) => {
   )
 });
 
-export { toggleVideoLike, toggleCommentLike, getAllLikedVideos };
+export { toggleVideoLike, toggleCommentLike, getAllLikedVideos, toggleTweetLike };
