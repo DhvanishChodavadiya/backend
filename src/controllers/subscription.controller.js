@@ -83,4 +83,46 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     )
 })
 
-export { toggleSubscription,getUserChannelSubscribers }
+const getUsersSubscribedChannels = asyncHandler(async(req,res) => {
+    const {subscriberId} = req.params;
+    if (!isValidObjectId(subscriberId)) {
+        throw new apiError(400,"Invalid subscriber id.")
+    }
+
+    const userSubscribedChannels = await Subscription.aggregate([
+        {
+            $match: {
+                subscriber: new mongoose.Types.ObjectId(subscriberId)
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "channel",
+                foreignField: "_id",
+                as: "channel",
+                pipeline: [
+                    {
+                        $project: {
+                            userName: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    const totalSubscribedChannel = await Subscription.countDocuments({subscriber: subscriberId})
+
+    res.status(200)
+    .json(
+        new apiResponse(
+            200,
+            {userSubscribedChannels,totalSubscribedChannel},
+            "User's all subscribed channels fetched successfully."
+        )
+    )
+})
+
+export { toggleSubscription,getUserChannelSubscribers,getUsersSubscribedChannels }
