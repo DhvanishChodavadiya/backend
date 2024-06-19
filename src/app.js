@@ -32,4 +32,7 @@ app.use("/api/v1/playlist",playlistRouter);
 import subscriptionRouter from "./routes/subscription.route.js";
 app.use("/api/v1/subscription",subscriptionRouter);
 
+import tweetRouter from "./routes/tweet.route.js";
+app.use("/api/v1/tweet",tweetRouter);
+
 export {app}
